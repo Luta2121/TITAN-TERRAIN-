@@ -28,22 +28,22 @@ jobs:
         uses: android-actions/setup-android@v4
         with:
           packages: 'platform-tools'
-
-      - name: Install Android SDK packages
+       - name: Install Android SDK packages
         shell: bash
         run: |
+          set -e
           SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)"
           if [ -z "$SDKMANAGER" ]; then
             echo "ERROR: sdkmanager not found"
             exit 1
           fi
-          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses
-          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --install \
+          "$SDKMANAGER" --install \
             "platform-tools" \
             "platforms;android-34" \
             "build-tools;34.0.0"
-
-      - name: Download Godot 4.3
+            
+            
+            - name: Download Godot 4.3
         shell: bash
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
