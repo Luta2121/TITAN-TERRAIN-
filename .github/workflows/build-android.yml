@@ -81,7 +81,7 @@ jobs:
         run: |
           set -e
           mkdir -p build
-          godot --headless --path . --export-debug "Android" build/TITAN_TERRAIN.apk
+          godot --headless --verbose --path . --export-debug "Android" build/TITAN_TERRAIN.apk
           test -s build/TITAN_TERRAIN.apk
 
       - name: Upload APK
