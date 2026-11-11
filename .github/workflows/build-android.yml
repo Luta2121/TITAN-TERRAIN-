@@ -4,7 +4,11 @@ name: Build TITAN TERRAIN APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -19,40 +23,41 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: ''
-      
+          packages: |
+            platform-tools
+            platforms;android-34
+            build-tools;34.0.0
+
       - name: Download Godot 4.3
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
-          unzip Godot_v4.3-stable_linux.x86_64.zip
+          unzip -q Godot_v4.3-stable_linux.x86_64.zip
           chmod +x Godot_v4.3-stable_linux.x86_64
           sudo mv Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
-                - name: Install Android packages
-        run: |
-          sdkmanager "platforms;android-34" "build-tools;34.0.0" "ndk;23.2.8568313"
 
-      - name: Download export templates
+      - name: Download Godot export templates
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
           mkdir -p ~/.local/share/godot/export_templates/4.3.stable
           unzip -q Godot_v4.3-stable_export_templates.tpz -d /tmp/godot_templates
           cp -r /tmp/godot_templates/templates/* ~/.local/share/godot/export_templates/4.3.stable/
 
-      - name: Import project
-        run: godot --headless --editor --path . --quit
+      - name: Import Godot project
+        run: |
+          godot --headless --editor --path . --quit
 
-      - name: Check project
-        run: godot --headless --path . --editor --quit
+      - name: Build Android APK
+        run: |
+          mkdir -p build
+          godot --headless --path . --export-debug "Android" build/TITAN_TERRAIN.apk
 
-      - name: Upload project source
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: TITAN-TERRAIN-Source
-          path: |
-            project.godot
-            scenes/
-            scripts/
-            
+          name: TITAN-TERRAIN-APK
+          path: build/TITAN_TERRAIN.apk
+          
