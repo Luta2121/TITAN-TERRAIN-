@@ -19,19 +19,20 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-
-  
-
-      - name: Install Android packages
-        run: |
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" "ndk;23.2.8568313"
-
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+      
       - name: Download Godot 4.3
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
           unzip Godot_v4.3-stable_linux.x86_64.zip
           chmod +x Godot_v4.3-stable_linux.x86_64
           sudo mv Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
+                - name: Install Android packages
+        run: |
+          sdkmanager "platforms;android-34" "build-tools;34.0.0" "ndk;23.2.8568313"
 
       - name: Download export templates
         run: |
