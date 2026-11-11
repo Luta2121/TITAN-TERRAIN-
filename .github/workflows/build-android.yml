@@ -24,15 +24,25 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Install Android packages
+      - name: Install Android SDK packages
+        shell: bash
         run: |
-          yes | sdkmanager --licenses
-          sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "ERROR: sdkmanager not found"
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --install \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0"
 
       - name: Download Godot 4.3
+        shell: bash
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
           unzip -q Godot_v4.3-stable_linux.x86_64.zip
@@ -40,24 +50,40 @@ jobs:
           sudo mv Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
 
       - name: Download Godot export templates
+        shell: bash
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
           mkdir -p ~/.local/share/godot/export_templates/4.3.stable
           unzip -q Godot_v4.3-stable_export_templates.tpz -d /tmp/godot_templates
           cp -r /tmp/godot_templates/templates/* ~/.local/share/godot/export_templates/4.3.stable/
 
+      - name: Check Android export preset
+        shell: bash
+        run: |
+          if [ ! -f export_presets.cfg ]; then
+            echo "ERROR: export_presets.cfg is missing"
+            exit 1
+          fi
+          grep -q 'name="Android"' export_presets.cfg || {
+            echo 'ERROR: Android export preset not found'
+            exit 1
+          }
+
       - name: Import Godot project
         run: |
           godot --headless --editor --path . --quit
 
       - name: Build Android APK
+        shell: bash
         run: |
           mkdir -p build
           godot --headless --path . --export-debug "Android" build/TITAN_TERRAIN.apk
+          test -f build/TITAN_TERRAIN.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: TITAN-TERRAIN-APK
           path: build/TITAN_TERRAIN.apk
+          if-no-files-found: error
           
